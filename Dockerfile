@@ -41,7 +41,7 @@ RUN ln -s /lib /lib64
 
 ## <snip> install other runtime dependencies of Skaffold
 
-ENV BAZEL_VERSION 0.19.2
+ENV BAZEL_VERSION 0.20.0
 ENV BAZEL_SRC /src/bazel/${BAZEL_VERSION}
 ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
 RUN mkdir -p "${BAZEL_SRC}"
