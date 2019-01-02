@@ -1,73 +1,20 @@
-FROM golang:1.10-alpine AS build
+FROM ubuntu:18.04
 
-RUN apk add --update \
-      bash \
-      curl \
-      dev86 \
-      g++ \
-      gcc \
-      git \
-      linux-headers \
-      make \
-      openjdk8 \
-      py-pip \
-      python \
-      python-dev \
-      unzip \
-      zip \
-      && true \
+WORKDIR /tmp/bazel
 
-      && mkdir /out \
-      && mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/ \
-      
-      && apk add --no-cache --initdb --root /out \
-      alpine-baselayout \
-      busybox \
-      ca-certificates \
-      coreutils \
-      git \
-      libc6-compat \
-      libgcc \
-      libstdc++ \
-      python \
-      && true
-
-## <snip> build Skaffold, which uses bazel
-
-WORKDIR /out
-
-RUN ln -s /lib /lib64
+RUN apt update \
+    && apt install -y pkg-config zip zlib1g-dev unzip wget apt-transport-https ca-certificates curl software-properties-common \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - \
+    && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    && apt update \
+    && apt install -y docker-ce git make g++ python openjdk-11-jdk
 
 
-## <snip> install other runtime dependencies of Skaffold
+ENV BAZEL_VERSION 0.21.0
+ENV PATH "/root/bin:${PATH}"
 
-ENV BAZEL_VERSION 0.20.0
-ENV BAZEL_SRC /src/bazel/${BAZEL_VERSION}
-ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
-RUN mkdir -p "${BAZEL_SRC}"
-WORKDIR "${BAZEL_SRC}"
-RUN curl --silent --location "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-dist.zip" --output bazel-dist.zip \
-    && unzip bazel-dist.zip && rm -f bazel-dist.zip
-
-RUN bash compile.sh && mv output/bazel /out/usr/local/bin/bazel
-
-
-# ===========================================================================================================================================================
-# This is the Main image we will be using to run bazel
-# ===========================================================================================================================================================
-
-FROM openjdk:8u181-jdk-alpine3.8
-
-RUN apk add --update \
-      bash \
-      g++ \
-      gcc \
-      git \
-      make \
-      docker \
-      && true
-
-COPY --from=build  /out /
-
-CMD skaffold
-
+RUN wget "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh" \
+    &&  chmod +x bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh \
+    &&  ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh --user \
+    && apt remove -y pkg-config zip zlib1g-dev unzip wget apt-transport-https ca-certificates curl software-properties-common \
+    &&  bazel version
