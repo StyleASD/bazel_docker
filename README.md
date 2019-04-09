@@ -6,3 +6,7 @@ The idea behind this images is to create a minimal Bazel image to be used in CI/
 
 -   docker build -t styleasd/bazel_base:latest -t styleasd/bazel_base:0.9.1 ./
 -   docker push styleasd/bazel_base
+
+# Testing
+
+docker run styleasd/bazel_base /bin/sh -c "/opt/jdk/bin/java -version"
