@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM openjdk:11.0.6-slim-buster
 
 ENV BAZEL_VERSION 2.2.0
 ENV PATH "/root/bin:${PATH}"
